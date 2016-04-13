@@ -46,7 +46,7 @@ struct jrpc_procedure {
 };
 
 struct jrpc_server {
-	int port_number;
+	char *addr;
 	struct ev_loop *loop;
 	ev_io listen_watcher;
 	int procedure_count;
@@ -63,10 +63,10 @@ struct jrpc_connection {
 	int debug_level;
 };
 
-int jrpc_server_init(struct jrpc_server *server, int port_number);
+int jrpc_server_init(struct jrpc_server *server, char *addr);
 
 int jrpc_server_init_with_ev_loop(struct jrpc_server *server,
-        int port_number, struct ev_loop *loop);
+        char *addr, struct ev_loop *loop);
 
 void jrpc_server_run(struct jrpc_server *server);
 

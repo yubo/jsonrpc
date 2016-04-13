@@ -239,17 +239,17 @@ static void accept_cb(struct ev_loop *loop, ev_io *w, int revents) {
 	}
 }
 
-int jrpc_server_init(struct jrpc_server *server, int port_number) {
+int jrpc_server_init(struct jrpc_server *server, char *addr) {
     loop = EV_DEFAULT;
-    return jrpc_server_init_with_ev_loop(server, port_number, loop);
+    return jrpc_server_init_with_ev_loop(server, addr, loop);
 }
 
 int jrpc_server_init_with_ev_loop(struct jrpc_server *server, 
-        int port_number, struct ev_loop *loop) {
+        char *addr, struct ev_loop *loop) {
 	memset(server, 0, sizeof(struct jrpc_server));
 	server->loop = loop;
-	server->port_number = port_number;
-	char * debug_level_env = getenv("JRPC_DEBUG");
+	server->addr = addr;
+	char *debug_level_env = getenv("JRPC_DEBUG");
 	if (debug_level_env == NULL)
 		server->debug_level = 0;
 	else {
@@ -266,15 +266,25 @@ static int __jrpc_server_start(struct jrpc_server *server) {
 	unsigned int len;
 	int yes = 1;
 	int rv;
-	char PORT[6];
-	sprintf(PORT, "%d", server->port_number);
+	char buff[128], *host, *port;
+
+	strncpy(buff, server->addr, sizeof(buff)-1);
+	host = buff;
+	port = strchr(host, ':');
+	if (port == NULL) {
+		fprintf(stderr, "err server listen address %s\n", server->addr);
+		return 1;
+	}
+	*port++ = '\0';
+
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_PASSIVE; // use my IP
 
-	if ((rv = getaddrinfo(NULL, PORT, &hints, &servinfo)) != 0) {
-		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
+	if ((rv = getaddrinfo(host, port, &hints, &servinfo)) != 0) {
+		fprintf(stderr, "err:%s host:%s port:%s\n",
+				gai_strerror(rv), host, port);
 		return 1;
 	}
 
@@ -304,7 +314,7 @@ static int __jrpc_server_start(struct jrpc_server *server) {
 			perror("server: getsockname");
 			continue;
 		}
-		server->port_number = ntohs( sockaddr.sin_port );
+		//server->port_number = ntohs( sockaddr.sin_port );
 
 		break;
 	}

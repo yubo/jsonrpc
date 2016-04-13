@@ -33,7 +33,7 @@ static cJSON * exit_server(jrpc_context * ctx, cJSON * params, cJSON *id) {
 }
 
 int main(void) {
-	jrpc_server_init(&my_server, PORT);
+	jrpc_server_init(&my_server, "127.0.0.1:1234");
 	jrpc_register_procedure(&my_server, say_hello, "sayHello", NULL );
 	jrpc_register_procedure(&my_server, exit_server, "exit", NULL );
 	jrpc_server_run(&my_server);
