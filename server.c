@@ -23,11 +23,11 @@
 
 struct jrpc_server my_server;
 
-cJSON * say_hello(jrpc_context * ctx, cJSON * params, cJSON *id) {
+static cJSON * say_hello(jrpc_context * ctx, cJSON * params, cJSON *id) {
 	return cJSON_CreateString("Hello!");
 }
 
-cJSON * exit_server(jrpc_context * ctx, cJSON * params, cJSON *id) {
+static cJSON * exit_server(jrpc_context * ctx, cJSON * params, cJSON *id) {
 	jrpc_server_stop(&my_server);
 	return cJSON_CreateString("Bye!");
 }

@@ -22,7 +22,7 @@ No further dependencies.
 
 ###Testing
 
-Run `autoreconf -i`  before `./configure` and `make`
+Run `cmake .`  before `make`
 
 Test the example server by running it and typing: 
 
@@ -36,3 +36,5 @@ Who?
 ----
 
 @hmngomes
+
+yubo@yubo.org
