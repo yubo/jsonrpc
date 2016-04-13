@@ -34,13 +34,13 @@
 #define JRPC_INVALID_PARAMS -32603
 #define JRPC_INTERNAL_ERROR -32693
 
-typedef struct {
+struct jrpc_context{
 	void *data;
 	int error_code;
 	char *error_message;
-} jrpc_context;
+};
 
-typedef struct json *(*jrpc_function) (jrpc_context * context, struct json * params,
+typedef struct json *(*jrpc_function) (struct jrpc_context * context, struct json * params,
 				 struct json * id);
 
 struct jrpc_procedure {

@@ -15,25 +15,35 @@ const (
 	URL = "127.0.0.1:1234"
 )
 
+type Args struct {
+	A, B int
+}
+
 func main() {
-	var reply string
+	args := Args{1, 2}
 
 	client, err := jsonrpc.Dial("tcp", URL)
 	if err != nil {
 		log.Fatal("dialing:", err)
 	}
 
-	err = client.Call("sayHello", nil, &reply)
-	if err != nil {
-		log.Fatal("SayHello error:", err)
+	{
+		var reply string
+		err = client.Call("sayHello", nil, &reply)
+		if err != nil {
+			log.Fatal("SayHello error:", err)
+		}
+		fmt.Printf("reply: %s\n", reply)
 	}
-	fmt.Printf("reply: %s\n", reply)
 
-	err = client.Call("exit", nil, &reply)
-	if err != nil {
-		log.Fatal("exit error:", err)
+	{
+		reply := Args{}
+		err = client.Call("swap", args, &reply)
+		if err != nil {
+			fmt.Println(err)
+		}
+		fmt.Printf("reply: A:%d B:%d\n", reply.A, reply.B)
 	}
-	fmt.Printf("reply: %s\n", reply)
 
 	//client.Close()
 }

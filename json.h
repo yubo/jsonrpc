@@ -60,22 +60,31 @@ struct json_hooks {
 /* Supply malloc, realloc and free functions to json */
 extern void json_init_hooks(struct json_hooks *hooks);
 
-/* Supply a block of JSON, and this returns a json object you can interrogate. Call json_Delete when finished. */
+/* Supply a block of JSON, and this returns a json object you can interrogate.
+ * Call json_Delete when finished. */
 extern struct json *json_parse(const char *value);
-/* Supply a block of JSON, and this returns a json object you can interrogate. Call json_Delete when finished.
+
+/* Supply a block of JSON, and this returns a json object you can interrogate.
+ * Call json_Delete when finished.
  * end_ptr will point to 1 past the end of the JSON object */
 extern struct json *json_parse_stream(const char *value, char **end_ptr);
+
 /* Render a json entity to text for transfer/storage. Free the char* when finished. */
 extern char *json_print(struct json *item);
-/* Render a json entity to text for transfer/storage without any formatting. Free the char* when finished. */
+
+/* Render a json entity to text for transfer/storage without any formatting.
+ * Free the char* when finished. */
 extern char *json_print_unformatted(struct json *item);
+
 /* Delete a json entity and all subentities. */
 extern void json_delete(struct json *c);
 
 /* Returns the number of items in an array (or object). */
 extern int json_get_array_size(struct json *array);
+
 /* Retrieve item number "item" from array "array". Returns NULL if unsuccessful. */
 extern struct json *json_get_array_item(struct json *array, int item);
+
 /* Get item "string" from object. Case insensitive. */
 extern struct json *json_get_object_item(struct json *object, const char *string);
 
@@ -99,7 +108,11 @@ extern struct json *json_create_string_array(const char **strings, int count);
 extern void json_add_item_to_array(struct json *array, struct json *item);
 extern void json_add_item_to_object(struct json *object,
 				     const char *string, struct json *item);
-/* Append reference to item to the specified array/object. Use this when you want to add an existing json to a new json, but don't want to corrupt your existing json. */
+/*
+ * Append reference to item to the specified array/object. 
+ * Use this when you want to add an existing json to a new json,
+ * but don't want to corrupt your existing json.
+ */
 extern void json_add_item_reference_to_array(struct json *array,
 					      struct json *item);
 extern void json_add_item_reference_to_object(struct json *object,

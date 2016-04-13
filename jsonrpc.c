@@ -85,7 +85,7 @@ static int invoke_procedure(struct jrpc_server *server,
 {
 	struct json *returned = NULL;
 	int procedure_found = 0;
-	jrpc_context ctx;
+	struct jrpc_context ctx;
 	ctx.error_code = 0;
 	ctx.error_message = NULL;
 	int i = server->procedure_count;
