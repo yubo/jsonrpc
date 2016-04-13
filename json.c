@@ -20,8 +20,10 @@
   THE SOFTWARE.
 */
 
-/* json */
-/* JSON parser in C. */
+/*
+ * yubo@yubo.org
+ * 2016-04-14
+ */
 
 #include <string.h>
 #include <stdio.h>

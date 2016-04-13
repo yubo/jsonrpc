@@ -20,6 +20,11 @@
   THE SOFTWARE.
 */
 
+/*
+ * yubo@yubo.org
+ * 2016-04-14
+ */
+
 #ifndef __json_h__
 #define __json_h__
 
