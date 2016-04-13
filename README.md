@@ -1,4 +1,4 @@
-jsonrpc-c
+jsonrpc
 =========
 
 JSON-RPC in C (server only for now)

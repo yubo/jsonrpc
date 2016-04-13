@@ -19,7 +19,7 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 
-#include "jsonrpc-c.h"
+#include "jsonrpc.h"
 
 static int __jrpc_server_start(struct jrpc_server *server);
 static void jrpc_procedure_destroy(struct jrpc_procedure *procedure);
@@ -46,43 +46,44 @@ static int send_response(struct jrpc_connection *conn, char *response)
 }
 
 static int send_error(struct jrpc_connection *conn, int code, char *message,
-		      cJSON * id)
+		      struct json *id)
 {
 	int return_value = 0;
-	cJSON *result_root = cJSON_CreateObject();
-	cJSON *error_root = cJSON_CreateObject();
-	cJSON_AddNumberToObject(error_root, "code", code);
-	cJSON_AddStringToObject(error_root, "message", message);
-	cJSON_AddItemToObject(result_root, "error", error_root);
-	cJSON_AddItemToObject(result_root, "id", id);
-	char *str_result = cJSON_Print(result_root);
+	struct json *result_root = json_create_object();
+	struct json *error_root = json_create_object();
+	json_add_number_to_object(error_root, "code", code);
+	json_add_string_to_object(error_root, "message", message);
+	json_add_item_to_object(result_root, "error", error_root);
+	json_add_item_to_object(result_root, "id", id);
+	char *str_result = json_print(result_root);
 	return_value = send_response(conn, str_result);
 	free(str_result);
-	cJSON_Delete(result_root);
+	json_delete(result_root);
 	free(message);
 	return return_value;
 }
 
-static int send_result(struct jrpc_connection *conn, cJSON * result, cJSON * id)
+static int send_result(struct jrpc_connection *conn, struct json *result,
+		       struct json *id)
 {
 	int return_value = 0;
-	cJSON *result_root = cJSON_CreateObject();
+	struct json *result_root = json_create_object();
 	if (result)
-		cJSON_AddItemToObject(result_root, "result", result);
-	cJSON_AddItemToObject(result_root, "id", id);
+		json_add_item_to_object(result_root, "result", result);
+	json_add_item_to_object(result_root, "id", id);
 
-	char *str_result = cJSON_Print(result_root);
+	char *str_result = json_print(result_root);
 	return_value = send_response(conn, str_result);
 	free(str_result);
-	cJSON_Delete(result_root);
+	json_delete(result_root);
 	return return_value;
 }
 
 static int invoke_procedure(struct jrpc_server *server,
 			    struct jrpc_connection *conn, char *name,
-			    cJSON * params, cJSON * id)
+			    struct json *params, struct json *id)
 {
-	cJSON *returned = NULL;
+	struct json *returned = NULL;
 	int procedure_found = 0;
 	jrpc_context ctx;
 	ctx.error_code = 0;
@@ -92,7 +93,8 @@ static int invoke_procedure(struct jrpc_server *server,
 		if (!strcmp(server->procedures[i].name, name)) {
 			procedure_found = 1;
 			ctx.data = server->procedures[i].data;
-			returned = server->procedures[i].function(&ctx, params, id);
+			returned =
+			    server->procedures[i].function(&ctx, params, id);
 			break;
 		}
 	}
@@ -108,15 +110,16 @@ static int invoke_procedure(struct jrpc_server *server,
 	}
 }
 
-static int invoke_procedure_id(struct jrpc_server *server, cJSON *method,
-		struct jrpc_connection *conn, cJSON *id, cJSON *params)
+static int invoke_procedure_id(struct jrpc_server *server, struct json *method,
+			       struct jrpc_connection *conn, struct json *id,
+			       struct json *params)
 {
 	//We have to copy ID because using it on the reply and deleting the response Object will also delete ID
-	cJSON *id_copy = NULL;
+	struct json *id_copy = NULL;
 	if (id != NULL)
-		id_copy = (id->type == cJSON_String)
-			? cJSON_CreateString(id->valuestring) 
-			: cJSON_CreateNumber(id->valueint);
+		id_copy = (id->type == JSON_T_STRING)
+		    ? json_create_string(id->valuestring)
+		    : json_create_number(id->valueint);
 	if (server->debug_level)
 		printf("Method Invoked: %s\n", method->valuestring);
 	return invoke_procedure(server, conn, method->valuestring, params,
@@ -124,23 +127,27 @@ static int invoke_procedure_id(struct jrpc_server *server, cJSON *method,
 }
 
 static int eval_request(struct jrpc_server *server,
-			struct jrpc_connection *conn, cJSON * root)
+			struct jrpc_connection *conn, struct json *root)
 {
-	cJSON *method, *params, *id;
-	method = cJSON_GetObjectItem(root, "method");
+	struct json *method, *params, *id;
+	method = json_get_object_item(root, "method");
 
-	if (method != NULL && method->type == cJSON_String) {
-		params = cJSON_GetObjectItem(root, "params");
-		if (params == NULL || params->type == cJSON_Array || params->type == cJSON_Object) {
-			id = cJSON_GetObjectItem(root, "id");
-			if (id == NULL || id->type == cJSON_String || id->type == cJSON_Number) {
-				return invoke_procedure_id(server, method, conn, id, params);
+	if (method != NULL && method->type == JSON_T_STRING) {
+		params = json_get_object_item(root, "params");
+		if (params == NULL || params->type == JSON_T_ARRAY
+		    || params->type == JSON_T_OBJECT) {
+			id = json_get_object_item(root, "id");
+			if (id == NULL || id->type == JSON_T_STRING
+			    || id->type == JSON_T_NUMBER) {
+				return invoke_procedure_id(server, method, conn,
+							   id, params);
 			}
 
 		}
 	}
 	send_error(conn, JRPC_INVALID_REQUEST,
-		   strdup("The JSON sent is not a valid Request object."), NULL);
+		   strdup("The JSON sent is not a valid Request object."),
+		   NULL);
 	return -1;
 }
 
@@ -154,7 +161,7 @@ static void close_connection(struct ev_loop *loop, ev_io * w)
 
 static void connection_cb(struct ev_loop *loop, ev_io * w, int revents)
 {
-	cJSON *root;
+	struct json *root;
 	int fd, max_read_size;
 	struct jrpc_connection *conn;
 	struct jrpc_server *server = (struct jrpc_server *)w->data;
@@ -188,18 +195,18 @@ static void connection_cb(struct ev_loop *loop, ev_io * w, int revents)
 		if (server->debug_level)
 			printf("Client closed connection.\n");
 		return close_connection(loop, w);
-	} 
+	}
 
 	conn->pos += bytes_read;
 
-	if ((root = cJSON_Parse_Stream(conn->buffer, &end_ptr)) != NULL) {
+	if ((root = json_parse_stream(conn->buffer, &end_ptr)) != NULL) {
 		if (server->debug_level > 1) {
-			str_result = cJSON_Print(root);
+			str_result = json_print(root);
 			printf("Valid JSON Received:\n%s\n", str_result);
 			free(str_result);
 		}
 
-		if (root->type == cJSON_Object) {
+		if (root->type == JSON_T_OBJECT) {
 			eval_request(server, conn, root);
 		}
 		//shift processed request, discarding it
@@ -209,18 +216,19 @@ static void connection_cb(struct ev_loop *loop, ev_io * w, int revents)
 		memset(conn->buffer + conn->pos, 0,
 		       conn->buffer_size - conn->pos - 1);
 
-		cJSON_Delete(root);
+		json_delete(root);
 	} else {
 		// did we parse the all buffer? If so, just wait for more.
 		// else there was an error before the buffer's end
 		if (end_ptr != (conn->buffer + conn->pos)) {
 			if (server->debug_level) {
 				printf("INVALID JSON Received:\n---\n%s\n---\n",
-				     conn->buffer);
+				       conn->buffer);
 			}
 			send_error(conn, JRPC_PARSE_ERROR,
 				   strdup("Parse error. Invalid JSON"
-				   " was received by the server."), NULL);
+					  " was received by the server."),
+				   NULL);
 			return close_connection(loop, w);
 		}
 	}

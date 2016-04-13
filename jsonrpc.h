@@ -11,7 +11,7 @@
 #ifndef JSONRPCC_H_
 #define JSONRPCC_H_
 
-#include "cJSON.h"
+#include "json.h"
 #include <ev.h>
 
 /*
@@ -40,8 +40,8 @@ typedef struct {
 	char *error_message;
 } jrpc_context;
 
-typedef cJSON *(*jrpc_function) (jrpc_context * context, cJSON * params,
-				 cJSON * id);
+typedef struct json *(*jrpc_function) (jrpc_context * context, struct json * params,
+				 struct json * id);
 
 struct jrpc_procedure {
 	char *name;

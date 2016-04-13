@@ -12,14 +12,14 @@ if(APPLE)
   LINK_DIRECTORIES(/opt/local/lib)
 endif()
 
-add_library(jsonrpc-c SHARED cJSON.c jsonrpc-c.c)
-target_link_libraries(jsonrpc-c ev)
+add_library(jsonrpc SHARED json.c jsonrpc.c)
+target_link_libraries(jsonrpc ev)
 
-install(FILES jsonrpc-c.h
+install(FILES jsonrpc.h
 	DESTINATION include
 )
 
-install(TARGETS jsonrpc-c
+install(TARGETS jsonrpc
 	LIBRARY DESTINATION lib
 )
 
