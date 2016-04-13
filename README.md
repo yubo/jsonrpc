@@ -32,6 +32,13 @@ or
 
 `echo "{\"method\":\"exit\"}" | nc localhost 1234`
 
+#### depends
+
+```shell
+#ubuntu
+sudo apt-get install libev-dev
+```
+
 Who?
 ----
 
