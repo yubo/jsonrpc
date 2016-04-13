@@ -3,6 +3,9 @@
  *
  *  Created on: Oct 11, 2012
  *      Author: hmng
+ *  
+ *  changed by yubo@yubo.org
+ *  2016-04-13
  */
 
 #include <stdio.h>
