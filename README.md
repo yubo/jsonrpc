@@ -1,7 +1,7 @@
 jsonrpc
 =========
 
-JSON-RPC in C (server only for now)
+JSON-RPC in C (server only) and  you can use jsonrpc in go(see client.go example)
 
 What?
 -----

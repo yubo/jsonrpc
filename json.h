@@ -94,14 +94,14 @@ extern struct json *json_get_array_item(struct json *array, int item);
 extern struct json *json_get_object_item(struct json *object, const char *string);
 
 /* These calls create a json item of the appropriate type. */
-extern struct json *json_create_null();
-extern struct json *json_create_true();
-extern struct json *json_create_false();
+extern struct json *json_create_null(void);
+extern struct json *json_create_true(void);
+extern struct json *json_create_false(void);
 extern struct json *json_create_bool(int b);
 extern struct json *json_create_number(double num);
 extern struct json *json_create_string(const char *string);
-extern struct json *json_create_array();
-extern struct json *json_create_object();
+extern struct json *json_create_array(void);
+extern struct json *json_create_object(void);
 
 /* These utilities create an Array of count items. */
 extern struct json *json_create_int_array(int *numbers, int count);

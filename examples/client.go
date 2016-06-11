@@ -19,8 +19,13 @@ type Args struct {
 	A, B int
 }
 
+type Replay struct {
+	Args []Args
+	Str  string
+}
+
 func main() {
-	args := Args{1, 2}
+	args := Args{3, 10}
 
 	client, err := jsonrpc.Dial("tcp", URL)
 	if err != nil {
@@ -37,12 +42,12 @@ func main() {
 	}
 
 	{
-		reply := Args{}
-		err = client.Call("swap", args, &reply)
+		reply := Replay{}
+		err = client.Call("foo", args, &reply)
 		if err != nil {
 			fmt.Println(err)
 		}
-		fmt.Printf("reply: A:%d B:%d\n", reply.A, reply.B)
+		fmt.Printf("reply: %v\n", reply)
 	}
 
 	//client.Close()
