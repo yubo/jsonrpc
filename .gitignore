@@ -5,4 +5,5 @@ server
 *.swp
 G*
 *.so
+*.a
 Makefile

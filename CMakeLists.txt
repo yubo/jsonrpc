@@ -1,3 +1,10 @@
+#
+# Copyright 2016 Xiaomi Corporation. All rights reserved.
+# Use of this source code is governed by a BSD-style
+# license that can be found in the LICENSE file.
+#
+# Authors:    Yu Bo <yubo@xiaomi.com>
+#
 cmake_minimum_required(VERSION 2.6)
 
 include(CheckIncludeFiles)
@@ -12,8 +19,14 @@ if(APPLE)
   LINK_DIRECTORIES(/opt/local/lib)
 endif()
 
-add_library(jsonrpc SHARED json.c jsonrpc.c)
+set(SOURCES json.c jsonrpc.c)
+
+add_library(jsonrpc SHARED ${SOURCES})
 target_link_libraries(jsonrpc ev)
+
+ADD_LIBRARY(jsonrpc-static STATIC ${SOURCES})
+target_link_libraries(jsonrpc-static ev)
+set_target_properties(jsonrpc-static PROPERTIES OUTPUT_NAME jsonrpc)
 
 install(FILES jsonrpc.h
 	DESTINATION include
