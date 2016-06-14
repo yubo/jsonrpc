@@ -21,19 +21,7 @@ endif()
 
 set(SOURCES json.c jsonrpc.c)
 
-add_library(jsonrpc SHARED ${SOURCES})
+add_library(jsonrpc STATIC ${SOURCES})
 target_link_libraries(jsonrpc ev)
-
-ADD_LIBRARY(jsonrpc-static STATIC ${SOURCES})
-target_link_libraries(jsonrpc-static ev)
-set_target_properties(jsonrpc-static PROPERTIES OUTPUT_NAME jsonrpc)
-
-install(FILES jsonrpc.h
-	DESTINATION include
-)
-
-install(TARGETS jsonrpc
-	LIBRARY DESTINATION lib
-)
 
 add_subdirectory(examples)
