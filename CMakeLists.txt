@@ -15,8 +15,8 @@ add_definitions(-O0 -Wall -Werror -Wmissing-declarations -Wno-error=unused-resul
 set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
 
 if(APPLE)
-  INCLUDE_DIRECTORIES(/opt/local/include)
-  LINK_DIRECTORIES(/opt/local/lib)
+	INCLUDE_DIRECTORIES(/opt/local/include)
+	LINK_DIRECTORIES(/opt/local/lib)
 endif()
 
 set(SOURCES json.c jsonrpc.c)
@@ -24,4 +24,6 @@ set(SOURCES json.c jsonrpc.c)
 add_library(jsonrpc STATIC ${SOURCES})
 target_link_libraries(jsonrpc ev)
 
-add_subdirectory(examples)
+if(DEFINED EXAMPLES)
+	add_subdirectory(examples)
+endif()
