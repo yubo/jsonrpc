@@ -35,6 +35,8 @@ static void *get_in_addr(struct sockaddr *sa)
 	return &(((struct sockaddr_in6 *)sa)->sin6_addr);
 }
 
+#define send_request(a, b) send_response(a, b)
+
 static int send_response(struct jrpc_connection *conn, char *response)
 {
 	int fd = conn->fd;
@@ -483,4 +485,195 @@ int jrpc_deregister_procedure(struct jrpc_server *server, char *name)
 	}
 	server->procedures = ptr;
 	return 0;
+}
+
+/* jsonrpc client */
+void close_client(struct jrpc_client *client)
+{
+	close(client->conn.fd);
+	free(client->conn.buffer);
+}
+
+static int _connect(int domain, int type, int protocol,
+	      const struct sockaddr *addr, socklen_t alen)
+{
+	int fd;
+
+	if ((fd = socket(domain, type, protocol)) < 0)
+		return (-1);
+	if (connect(fd, addr, alen) == 0) {
+		/*
+		 * Connection accepted.
+		 */
+		return fd;
+	}
+	close(fd);
+
+	return -1;
+}
+
+int jrpc_client_init(struct jrpc_client *client, char *addr)
+{
+	struct addrinfo hints, *servinfo, *p;
+	int rv;
+	char buff[128], *host, *port;
+
+	char *debug_level_env = getenv("JRPC_DEBUG");
+	if (debug_level_env == NULL)
+		client->debug_level = 0;
+	else {
+		client->debug_level = strtol(debug_level_env, NULL, 10);
+		printf("JSONRPC-C Debug level %d\n", client->debug_level);
+	}
+
+	memset(client, 0, sizeof(*client));
+	client->addr = addr;
+	client->conn.buffer_size = 1500;
+	client->conn.buffer = malloc(1500);
+	memset(client->conn.buffer, 0, 1500);
+	client->conn.pos = 0;
+	client->conn.debug_level = client->debug_level;
+
+	strncpy(buff, client->addr, sizeof(buff) - 1);
+	host = buff;
+	port = strchr(host, ':');
+	if (port == NULL) {
+		fprintf(stderr, "err server connect address %s\n", client->addr);
+		return 1;
+	}
+	*port++ = '\0';
+
+	memset(&hints, 0, sizeof hints);
+	hints.ai_family = AF_UNSPEC;
+	hints.ai_socktype = SOCK_STREAM;
+
+	if ((rv = getaddrinfo(host, port, &hints, &servinfo)) != 0) {
+		fprintf(stderr, "err:%s host:%s port:%s\n",
+			gai_strerror(rv), host, port);
+		return 1;
+	}
+
+	for (p = servinfo; p != NULL; p = p->ai_next) {
+		if ((client->conn.fd = _connect(p->ai_family, p->ai_socktype, p->ai_protocol,
+					    p->ai_addr, p->ai_addrlen)) < 0) {
+			perror("server: socket");
+			continue;
+		}
+		break;
+	}
+
+	if (p == NULL) {
+		fprintf(stderr, "client: failed to connect\n");
+		return 2;
+	}
+
+	freeaddrinfo(servinfo);	// all done with this structure
+
+	return 0;
+}
+
+int jrpc_client_call(struct jrpc_client *client, const char *method,
+		struct json *params, struct json **response)
+{
+	int fd, max_read_size;
+	size_t bytes_read = 0;
+	char *str_result, *new_buffer, *str_request, *end_ptr = NULL;
+	struct jrpc_connection *conn;
+	struct json *root, *request;
+
+	request = json_create_object();
+	json_add_string_to_object(request, "method", method);
+	json_add_item_to_object(request, "params", params);
+	json_add_number_to_object(request, "id", client->id);
+	str_request = json_print(request);
+
+	send_request(&client->conn, str_request);
+	free(str_request);
+	json_delete(request);
+
+
+
+	// read
+	conn = &client->conn;
+	fd = conn->fd;
+
+	for (;;){
+		if (conn->pos == (conn->buffer_size - 1)) {
+			conn->buffer_size *= 2;
+			new_buffer = realloc(conn->buffer, conn->buffer_size);
+			if (new_buffer == NULL) {
+				perror("Memory error");
+				return -ENOMEM;
+			}
+			conn->buffer = new_buffer;
+			memset(conn->buffer + conn->pos, 0,
+			       conn->buffer_size - conn->pos);
+		}
+		// can not fill the entire buffer, string must be NULL terminated
+		max_read_size = conn->buffer_size - conn->pos - 1;
+		if ((bytes_read = read(fd, conn->buffer + conn->pos, max_read_size))
+		    == -1) {
+			perror("read");
+			return -EIO;
+		}
+		if (!bytes_read) {
+			// client closed the sending half of the connection
+			if (client->debug_level)
+				printf("Client closed connection.\n");
+			return -EIO;
+		}
+
+
+		conn->pos += bytes_read;
+
+		if ((root = json_parse_stream(conn->buffer, &end_ptr)) != NULL) {
+			if (client->debug_level > 1) {
+				str_result = json_print(root);
+				printf("Valid JSON Received:\n%s\n", str_result);
+				free(str_result);
+			}
+
+			if (root->type == JSON_T_OBJECT) {
+				struct json *id = json_get_object_item(root, "id");
+
+				if (id->type == JSON_T_STRING){
+					if (client->id != atoi(id->string))
+						goto out;
+				}else if (id->type == JSON_T_NUMBER){
+					if (client->id != id->valueint)
+						goto out;
+				}
+				client->id++;
+				//shift processed request, discarding it
+				memmove(conn->buffer, end_ptr, strlen(end_ptr) + 2);
+				conn->pos = strlen(end_ptr);
+				memset(conn->buffer + conn->pos, 0,
+				       conn->buffer_size - conn->pos - 1);
+
+				*response = json_detach_item_from_object(root, "result");
+				if (*response == NULL)
+					goto out;
+
+				json_delete(root);
+				return 0;
+			}
+out:
+			printf("INVALID JSON Received:\n---\n%s\n---\n",
+			       conn->buffer);
+			json_delete(root);
+			return -EINVAL;
+		} else if (end_ptr != (conn->buffer + conn->pos)) {
+			// did we parse the all buffer? If so, just wait for more.
+			// else there was an error before the buffer's end
+			if (client->debug_level) {
+				printf("INVALID JSON Received:\n---\n%s\n---\n",
+				       conn->buffer);
+			}
+			send_error(conn, JRPC_PARSE_ERROR,
+				   strdup("Parse error. Invalid JSON"
+					  " was received by the client."),
+				   NULL);
+			return -EINVAL;
+		}
+	}
 }
