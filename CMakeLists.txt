@@ -15,32 +15,34 @@ add_definitions(-O0 -Wall -Werror -Wmissing-declarations -Wno-error=unused-resul
 set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
 
 if(APPLE)
-  INCLUDE_DIRECTORIES(/opt/local/include)
-  LINK_DIRECTORIES(/opt/local/lib)
+	INCLUDE_DIRECTORIES(/opt/local/include)
+	LINK_DIRECTORIES(/opt/local/lib)
 endif()
 
 set(SOURCES json.c jsonrpc.c)
 
-if(LIB_STATIC)
+if(BUILD_STATIC)
 	add_library(jsonrpc STATIC ${SOURCES})
 	target_link_libraries(jsonrpc ev)
-else(LIB_STATIC)
+else(BUILD_STATIC)
 	add_library(jsonrpc SHARED ${SOURCES})
 	target_link_libraries(jsonrpc ev)
 
 	ADD_LIBRARY(jsonrpc-static STATIC ${SOURCES})
 	target_link_libraries(jsonrpc-static ev)
 	set_target_properties(jsonrpc-static PROPERTIES OUTPUT_NAME jsonrpc)
-endif(LIB_STATIC)
+endif(BUILD_STATIC)
 
 install(FILES jsonrpc.h
 	DESTINATION include
-)
+	)
 
-if(NOT LIB_STATIC)
-install(TARGETS jsonrpc
-	LIBRARY DESTINATION lib
-)
-endif(NOT LIB_STATIC)
+if(NOT BUILD_STATIC)
+	install(TARGETS jsonrpc
+		LIBRARY DESTINATION lib
+		)
+endif(NOT BUILD_STATIC)
 
-add_subdirectory(examples)
+if(BUILD_EXAMPLE)
+	add_subdirectory(examples)
+endif(BUILD_EXAMPLE)
