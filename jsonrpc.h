@@ -68,20 +68,27 @@ struct jrpc_connection {
 };
 
 int jrpc_server_init(struct jrpc_server *server, char *addr);
-
 int jrpc_server_init_with_ev_loop(struct jrpc_server *server,
 				  char *addr, struct ev_loop *loop);
-
 void jrpc_server_run(struct jrpc_server *server);
-
 int jrpc_server_stop(struct jrpc_server *server);
-
 void jrpc_server_destroy(struct jrpc_server *server);
-
 int jrpc_register_procedure(struct jrpc_server *server,
 			    jrpc_function function_pointer, char *name,
 			    void *data);
-
 int jrpc_deregister_procedure(struct jrpc_server *server, char *name);
+
+/* jsonrpc client */
+struct jrpc_client {
+	char *addr;
+	int debug_level;
+	int id;
+	struct jrpc_connection conn;
+};
+
+void close_client(struct jrpc_client *client);
+int jrpc_client_init(struct jrpc_client *client, char *addr);
+int jrpc_client_call(struct jrpc_client *client, const char *method,
+		struct json *params, struct json **response);
 
 #endif

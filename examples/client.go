@@ -17,6 +17,9 @@ const (
 
 type Args struct {
 	A, B int
+	S    struct {
+		A, B int
+	}
 }
 
 type Replay struct {
@@ -25,7 +28,9 @@ type Replay struct {
 }
 
 func main() {
-	args := Args{3, 10}
+	args := Args{A: 3, B: 10}
+	args.S.A = 1
+	args.S.B = 2
 
 	client, err := jsonrpc.Dial("tcp", URL)
 	if err != nil {
