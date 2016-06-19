@@ -17,28 +17,44 @@
 #include <arpa/inet.h>
 #include "jsonrpc.h"
 
-#define ADDR "127.0.0.1:1234"	// the port users will be connecting to
+#define ADDR "127.0.0.1:1105"	// the port users will be connecting to
 
 struct jrpc_client my_client;
 
 int main(void)
 {
 	char *str_reply;
-	struct json *reply;
+	struct json *reply, *item1, *item2, *params;
 	struct jrpc_client *client = &my_client;
 
 	int ret = jrpc_client_init(client, ADDR);
-	if (ret != 0){
+	if (ret != 0) {
 		exit(ret);
 	}
-	if ((ret = jrpc_client_call(client, "sayHello",
-					NULL, &reply)) != 0){
+
+	item1 = json_create_object();
+	json_add_number_to_object(item1, "A", 3);
+	json_add_number_to_object(item1, "B", 10);
+
+	item2 = json_create_object();
+	json_add_number_to_object(item2, "A", 1);
+	json_add_number_to_object(item2, "B", 2);
+
+	params = json_create_array();
+	json_add_item_to_object(item1,"S", item2);
+	json_add_item_to_array(params, item1);
+
+	// jrpc_client_call will free params
+	if ((ret = jrpc_client_call(client, "foo", params, &reply)) != 0) {
 		exit(ret);
 	}
 
 	str_reply = json_print(reply);
 	printf("%s\n", str_reply);
+
 	free(str_reply);
+	json_delete(reply);
+	jrpc_client_close(client);
 
 	return 0;
 }

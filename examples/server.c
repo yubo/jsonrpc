@@ -22,7 +22,7 @@
 #include <signal.h>
 #include "jsonrpc.h"
 
-#define ADDR "127.0.0.1:1234"	// the port users will be connecting to
+#define ADDR "127.0.0.1:1105"	// the port users will be connecting to
 
 struct jrpc_server my_server;
 

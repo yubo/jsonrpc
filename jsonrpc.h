@@ -86,7 +86,7 @@ struct jrpc_client {
 	struct jrpc_connection conn;
 };
 
-void close_client(struct jrpc_client *client);
+void jrpc_client_close(struct jrpc_client *client);
 int jrpc_client_init(struct jrpc_client *client, char *addr);
 int jrpc_client_call(struct jrpc_client *client, const char *method,
 		struct json *params, struct json **response);

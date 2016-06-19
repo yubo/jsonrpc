@@ -488,10 +488,11 @@ int jrpc_deregister_procedure(struct jrpc_server *server, char *name)
 }
 
 /* jsonrpc client */
-void close_client(struct jrpc_client *client)
+void jrpc_client_close(struct jrpc_client *client)
 {
 	close(client->conn.fd);
 	free(client->conn.buffer);
+	client->conn.buffer = NULL;
 }
 
 static int _connect(int domain, int type, int protocol,
@@ -517,8 +518,10 @@ int jrpc_client_init(struct jrpc_client *client, char *addr)
 	struct addrinfo hints, *servinfo, *p;
 	int rv;
 	char buff[128], *host, *port;
+	char *debug_level_env;
 
-	char *debug_level_env = getenv("JRPC_DEBUG");
+	memset(client, 0, sizeof(*client));
+	debug_level_env = getenv("JRPC_DEBUG");
 	if (debug_level_env == NULL)
 		client->debug_level = 0;
 	else {
@@ -526,7 +529,6 @@ int jrpc_client_init(struct jrpc_client *client, char *addr)
 		printf("JSONRPC-C Debug level %d\n", client->debug_level);
 	}
 
-	memset(client, 0, sizeof(*client));
 	client->addr = addr;
 	client->conn.buffer_size = 1500;
 	client->conn.buffer = malloc(1500);
