@@ -34,7 +34,7 @@ static struct json *say_hello(struct jrpc_context * ctx, struct json *params,
 
 #define json_dump(a) do {\
 	char *p; \
-	p = json_print_unformatted(a); \
+	p = json_sprint_unformatted(a); \
 	printf(#a " %s\n", p); \
 	free(p); \
 }while(0)

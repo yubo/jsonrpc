@@ -47,8 +47,8 @@ static int json_strcasecmp(const char *s1, const char *s2)
 	    tolower(*(const unsigned char *)s2);
 }
 
-static void *(*json_malloc) (size_t sz) = malloc;
-static void (*json_free) (void *ptr) = free;
+void *(*json_malloc) (size_t sz) = malloc;
+void (*json_free) (void *ptr) = free;
 
 static char *json_strdup(const char *str)
 {
@@ -400,12 +400,12 @@ struct json *json_parse_stream(const char *value, char **end_ptr)
 }
 
 /* Render a struct json item/entity/structure to text. */
-char *json_print(struct json *item)
+char *json_sprint(struct json *item)
 {
 	return print_value(item, 0, 1);
 }
 
-char *json_print_unformatted(struct json *item)
+char *json_sprint_unformatted(struct json *item)
 {
 	return print_value(item, 0, 0);
 }

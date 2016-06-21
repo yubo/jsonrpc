@@ -75,11 +75,11 @@ extern struct json *json_parse(const char *value);
 extern struct json *json_parse_stream(const char *value, char **end_ptr);
 
 /* Render a json entity to text for transfer/storage. Free the char* when finished. */
-extern char *json_print(struct json *item);
+extern char *json_sprint(struct json *item);
 
 /* Render a json entity to text for transfer/storage without any formatting.
  * Free the char* when finished. */
-extern char *json_print_unformatted(struct json *item);
+extern char *json_sprint_unformatted(struct json *item);
 
 /* Delete a json entity and all subentities. */
 extern void json_delete(struct json *c);
@@ -137,6 +137,9 @@ extern void json_replace_item_in_array(struct json *array, int which,
 extern void json_replace_item_in_object(struct json *object,
 					const char *string,
 					struct json *newitem);
+
+void *(*json_malloc) (size_t sz);
+void (*json_free) (void *ptr);
 
 #define json_add_null_to_object(object,name)     json_add_item_to_object(object, name, json_create_null())
 #define json_add_true_to_object(object,name)     json_add_item_to_object(object, name, json_create_true())

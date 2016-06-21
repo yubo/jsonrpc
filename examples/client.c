@@ -49,7 +49,7 @@ int main(void)
 		exit(ret);
 	}
 
-	str_reply = json_print(reply);
+	str_reply = json_sprint(reply);
 	printf("%s\n", str_reply);
 
 	free(str_reply);

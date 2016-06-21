@@ -57,9 +57,9 @@ static int send_error(struct jrpc_connection *conn, int code, char *message,
 	json_add_string_to_object(error_root, "message", message);
 	json_add_item_to_object(result_root, "error", error_root);
 	json_add_item_to_object(result_root, "id", id);
-	char *str_result = json_print(result_root);
+	char *str_result = json_sprint(result_root);
 	return_value = send_response(conn, str_result);
-	free(str_result);
+	json_free(str_result);
 	json_delete(result_root);
 	free(message);
 	return return_value;
@@ -74,9 +74,9 @@ static int send_result(struct jrpc_connection *conn, struct json *result,
 		json_add_item_to_object(result_root, "result", result);
 	json_add_item_to_object(result_root, "id", id);
 
-	char *str_result = json_print(result_root);
+	char *str_result = json_sprint(result_root);
 	return_value = send_response(conn, str_result);
-	free(str_result);
+	json_free(str_result);
 	json_delete(result_root);
 	return return_value;
 }
@@ -203,9 +203,9 @@ static void connection_cb(struct ev_loop *loop, ev_io * w, int revents)
 
 	if ((root = json_parse_stream(conn->buffer, &end_ptr)) != NULL) {
 		if (server->debug_level > 1) {
-			str_result = json_print(root);
+			str_result = json_sprint(root);
 			printf("Valid JSON Received:\n%s\n", str_result);
-			free(str_result);
+			json_free(str_result);
 		}
 
 		if (root->type == JSON_T_OBJECT) {
@@ -587,10 +587,10 @@ int jrpc_client_call(struct jrpc_client *client, const char *method,
 	json_add_string_to_object(request, "method", method);
 	json_add_item_to_object(request, "params", params);
 	json_add_number_to_object(request, "id", client->id);
-	str_request = json_print(request);
+	str_request = json_sprint(request);
 
 	send_request(&client->conn, str_request);
-	free(str_request);
+	json_free(str_request);
 	json_delete(request);
 
 
@@ -630,9 +630,9 @@ int jrpc_client_call(struct jrpc_client *client, const char *method,
 
 		if ((root = json_parse_stream(conn->buffer, &end_ptr)) != NULL) {
 			if (client->debug_level > 1) {
-				str_result = json_print(root);
+				str_result = json_sprint(root);
 				printf("Valid JSON Received:\n%s\n", str_result);
-				free(str_result);
+				json_free(str_result);
 			}
 
 			if (root->type == JSON_T_OBJECT) {
