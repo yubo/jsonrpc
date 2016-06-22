@@ -10,7 +10,7 @@ cmake_minimum_required(VERSION 2.6)
 include(CheckIncludeFiles)
 
 project(jsonrpc C)
-add_definitions(-g -O0 -Wall -Werror -Wmissing-declarations -Wno-error=unused-result -I${CMAKE_CURRENT_SOURCE_DIR})
+add_definitions(-Wall -Werror -Wmissing-declarations -Wno-error=unused-result -I${CMAKE_CURRENT_SOURCE_DIR})
 
 set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
 

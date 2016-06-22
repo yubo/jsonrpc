@@ -35,7 +35,15 @@ static void *get_in_addr(struct sockaddr *sa)
 	return &(((struct sockaddr_in6 *)sa)->sin6_addr);
 }
 
-#define send_request(a, b) send_response(a, b)
+static int send_request(struct jrpc_connection *conn, char *request)
+{
+	int fd = conn->fd;
+	if (conn->debug_level > 1)
+		printf("JSON Request:\n%s\n", request);
+	write(fd, request, strlen(request));
+	write(fd, "\n", 1);
+	return 0;
+}
 
 static int send_response(struct jrpc_connection *conn, char *response)
 {
