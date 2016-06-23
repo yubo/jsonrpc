@@ -10,7 +10,7 @@ cmake_minimum_required(VERSION 2.6)
 include(CheckIncludeFiles)
 
 project(jsonrpc C)
-add_definitions(-Wall -Werror -Wmissing-declarations -Wno-error=unused-result -I${CMAKE_CURRENT_SOURCE_DIR})
+add_definitions(-Wall -Werror -Wmissing-declarations -Wno-unused-result -Wno-strict-aliasing)
 
 set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
 
@@ -33,14 +33,9 @@ else(BUILD_STATIC)
 	set_target_properties(jsonrpc-static PROPERTIES OUTPUT_NAME jsonrpc)
 endif(BUILD_STATIC)
 
-install(FILES jsonrpc.h
-	DESTINATION include
-	)
-
 if(NOT BUILD_STATIC)
-	install(TARGETS jsonrpc
-		LIBRARY DESTINATION lib
-		)
+	install(FILES jsonrpc.h DESTINATION include)
+	install(TARGETS jsonrpc LIBRARY DESTINATION lib)
 endif(NOT BUILD_STATIC)
 
 if(BUILD_EXAMPLE)
